@@ -1,76 +1,101 @@
 #include <Arduino.h>
+#include <Audio.h>
+#include <AudioSampleBack.h>
+#include <AudioSampleBop.h>
+#include <AudioSampleChord1.h>
+#include <AudioSampleChord2.h>
+#include <AudioSampleHat.h>
+#include <AudioSampleHat2.h>
+#include <AudioSampleKick.h>
+#include <AudioSampleSnare.h>
+#include <SD.h>
+#include <SPI.h>
+#include <SamplePlayer.h>
+#include <SerialFlash.h>
+#include <Wire.h>
 #include <mtof.h>
 #include <scales.h>
 
-#include <Audio.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SD.h>
-#include <SerialFlash.h>
+SamplePlayer player(16);
 
-#include <AudioSampleClap.h>
-#include <AudioSampleSamples2kickyolo.h>
-#include <AudioSampleSamples3snarevinyldlj3.h>
-#include <AudioSampleSamples5hihatcloseddomain.h>
-#include <AudioSampleSamples6tomanalog5.h>
-#include <AudioSampleSamples7congamiddrive.h>
-#include <AudioSampleSamplesclap909.h>
-#include <AudioSampleSampleskickyolo.h>
+AudioAmplifier player_amp = player.output(5);
 
+AudioOutputMQS mqs1;
+AudioConnection patchCord2(player_amp, 0, mqs1, 0);
+AudioConnection patchCord3(player_amp, 0, mqs1, 1);
 
+int pattern_num = 0;
 
-// GUItool: begin automatically generated code
-AudioPlayMemory          playMem1;       //xy=127,680
-AudioAmplifier           amp1;           //xy=289,680
-AudioOutputMQS           mqs1;           //xy=482,686
-AudioConnection          patchCord1(playMem1, amp1);
-AudioConnection          patchCord2(amp1, 0, mqs1, 0);
-AudioConnection          patchCord3(amp1, 0, mqs1, 1);
-// GUItool: end automatically generated code
+void myNoteOn(byte channel, byte note, byte velocity) {
+  if (velocity < 0) {
+    return;
+  }
 
-const unsigned int* audioSamples[] = {
-  AudioSampleClap,
-  AudioSampleSamples2kickyolo,
-  AudioSampleSamples3snarevinyldlj3,
-  AudioSampleSamples5hihatcloseddomain,
-  AudioSampleSamples6tomanalog5,
-  AudioSampleSamples7congamiddrive,
-  AudioSampleSamplesclap909,
-  AudioSampleSampleskickyolo
-};
+  if (note == 60) player.trigger("KICK");
+  if (note == 61) player.trigger("SNARE");
+  if (note == 62) player.trigger("CHAT");
+  if (note == 63) player.trigger("CHAT2");
+  if (note == 64) player.trigger("BACK");
+  if (note == 65) player.trigger("C1");
+  if (note == 66) player.trigger("C2");
+  if (note == 67) player.trigger("BOP");
 
-int pattern[]={
-  1,0,2,1,5,6
-};
+  digitalWrite(13, HIGH);
+}
 
-int pattern_num=0;
+void myNoteOff(byte channel, byte note, byte velocity) {
+  digitalWrite(13, LOW);
 
+  if (note == 60) player.stop("KICK");
+  if (note == 61) player.stop("SNARE");
+  if (note == 62) player.stop("CHAT");
+  if (note == 63) player.stop("CHAT2");
+  if (note == 64) player.stop("BACK");
+  if (note == 65) player.stop("C1");
+  if (note == 66) player.stop("C2");
+  if (note == 67) player.stop("BOP");
+}
 void setup() {
   Serial.begin(57600);
-  AudioMemory(128);
-
-
+  Serial.println("Here");
+  AudioMemory(256);
+  
+  player.add_sample("KICK", AudioSampleKick);
+  player.add_sample("SNARE", AudioSampleHat2);
+  player.add_sample("CHAT", AudioSampleHat);
+  player.add_sample("CHAT2", AudioSampleHat2);
+  player.add_sample("BACK", AudioSampleBack);
+  player.add_sample("C1", AudioSampleChord1);
+  player.add_sample("C2", AudioSampleChord2);
+  player.add_sample("BOP", AudioSampleBop);
+  
+  Serial.println("Here everythin int");
+  
+  usbMIDI.setHandleNoteOn(myNoteOn);
+  usbMIDI.setHandleNoteOff(myNoteOff);
+  
+  // player.effects["KICK"].reverb->roomsize(0.5);
+  // player.effects["SNARE"].reverb->roomsize(0.5);
+  
+  Serial.println("Here everythin int 3");
   pinMode(13, OUTPUT);
 }
 
-
 void loop() {
-  
-  static unsigned long last_pattern_time = 0;
-  static unsigned long last_time = 0;
+  Serial.print("Here before midi");
+  usbMIDI.read();
+  Serial.print("Here after midi");
 
-  if(millis()-last_time>=100){
-    playMem1.play(audioSamples[3]);
-    last_time=millis();
+  // Debug outputk
+  static unsigned long lastDebugTime = 0;
+
+  if (millis() - lastDebugTime > 5000) {
+    Serial.print("Audio status - CPU: ");
+    Serial.print(AudioProcessorUsage());
+    Serial.print("%, Memory: ");
+    Serial.print(AudioMemoryUsage());
+    Serial.print("/");
+    Serial.println(AudioMemoryUsageMax());
+    lastDebugTime = millis();
   }
-
-  if(millis()-last_pattern_time>=500){
-  playMem1.play(audioSamples[pattern[pattern_num]]);
-  pattern_num=(pattern_num+1)%6;
-  last_pattern_time=millis();
-  }
-  
-
-
-
 }

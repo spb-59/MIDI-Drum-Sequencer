@@ -44,3 +44,112 @@ libraries by scanning project source files.
 
 More information about PlatformIO Library Dependency Finder
 - https://docs.platformio.org/page/librarymanager/ldf.html
+
+
+
+#pragma once
+
+#include <Audio.h>
+#include <string>
+#include <unordered_map>
+#include "Instrument.h"
+
+struct Effects {
+  AudioEffectFreeverb* reverb;
+  AudioEffectFlange* flanger;
+  AudioEffectBitcrusher* bitcrusher;
+  AudioEffectChorus* chorus;
+};
+
+class SamplePlayer : public Instrument {
+ private:
+  int num_samples;
+  AudioPlayMemory** players;
+  int sample_idx = 0;
+
+  AudioEffectFreeverb** freeverbs;
+  AudioEffectFlange** flangers;
+  AudioEffectBitcrusher** bitcrushers;
+  AudioEffectChorus** choruses;
+
+  AudioConnection** connections;
+  int conn_idx = 0;
+
+  std::unordered_map<std::string, const unsigned int*> samples;
+  std::unordered_map<std::string, int> sample_index;
+
+ public:
+  std::unordered_map<std::string, Effects> effects;
+
+  SamplePlayer(int num_voices) : Instrument(num_voices) {
+    num_samples = num_voices;
+    players = new AudioPlayMemory*[num_samples];
+    freeverbs = new AudioEffectFreeverb*[num_samples];
+    flangers = new AudioEffectFlange*[num_samples];
+    bitcrushers = new AudioEffectBitcrusher*[num_samples];
+    choruses = new AudioEffectChorus*[num_samples];
+
+    connections = new AudioConnection*[num_samples * 4];
+
+    for (int i = 0; i < num_samples; i++) {
+      players[i] = new AudioPlayMemory();
+      freeverbs[i] = new AudioEffectFreeverb();
+      flangers[i] = new AudioEffectFlange();
+      bitcrushers[i] = new AudioEffectBitcrusher();
+      choruses[i] = new AudioEffectChorus();
+
+      connections[conn_idx++] = new AudioConnection(*players[i], 0, *freeverbs[i], 0);
+      connections[conn_idx++] = new AudioConnection(*freeverbs[i], 0, *flangers[i], 0);
+      connections[conn_idx++] = new AudioConnection(*flangers[i], 0, *bitcrushers[i], 0);
+      connections[conn_idx++] = new AudioConnection(*bitcrushers[i], 0, *choruses[i], 0);
+
+      sources[i] = choruses[i];
+    }
+
+    setup_mixer();
+  }
+
+  void add_sample(const std::string& name, const unsigned int* data) {
+    if (sample_index.size() >= num_samples) return;
+    int index = sample_idx++;
+    sample_index[name] = index;
+    samples[name] = data;
+
+    effects[name].reverb = freeverbs[index];
+    effects[name].flanger = flangers[index];
+    effects[name].bitcrusher = bitcrushers[index];
+    effects[name].chorus = choruses[index];
+  }
+
+  void trigger(const std::string& name) {
+    auto it = samples.find(name);
+    auto idx = sample_index.find(name);
+    if (it == samples.end() || idx == sample_index.end()) return;
+    int index = idx->second;
+    players[index]->play(it->second);
+  }
+
+  void stop(const std::string& name) {
+    auto idx = sample_index.find(name);
+    if (idx == sample_index.end()) return;
+    int index = idx->second;
+    players[index]->stop();
+  }
+
+  ~SamplePlayer() {
+    for (int i = 0; i < num_samples; i++) {
+      delete players[i];
+      delete freeverbs[i];
+      delete flangers[i];
+      delete bitcrushers[i];
+      delete choruses[i];
+    }
+    for (int i = 0; i < conn_idx; i++) delete connections[i];
+    delete[] players;
+    delete[] freeverbs;
+    delete[] flangers;
+    delete[] bitcrushers;
+    delete[] choruses;
+    delete[] connections;
+  }
+};
