@@ -16,7 +16,7 @@
 #include <mtof.h>
 #include <scales.h>
 
-SamplePlayer player(16);
+SamplePlayer player(8);
 
 AudioAmplifier player_amp = player.output(5);
 
@@ -57,7 +57,7 @@ void myNoteOff(byte channel, byte note, byte velocity) {
 }
 void setup() {
   Serial.begin(57600);
-  Serial.println("Here");
+
   AudioMemory(256);
   
   player.add_sample("KICK", AudioSampleKick);
@@ -69,22 +69,33 @@ void setup() {
   player.add_sample("C2", AudioSampleChord2);
   player.add_sample("BOP", AudioSampleBop);
   
-  Serial.println("Here everythin int");
+
   
   usbMIDI.setHandleNoteOn(myNoteOn);
   usbMIDI.setHandleNoteOff(myNoteOff);
+
+
+  player.set_reverb_time("KICK",2);
+  player.set_reverb_time("C1",1);
+  player.set_dry_wet("KICK",0.9,0.1);
   
-  // player.effects["KICK"].reverb->roomsize(0.5);
-  // player.effects["SNARE"].reverb->roomsize(0.5);
-  
-  Serial.println("Here everythin int 3");
+
+   
+  analogReadAveraging(64);
   pinMode(13, OUTPUT);
 }
 
 void loop() {
-  Serial.print("Here before midi");
   usbMIDI.read();
-  Serial.print("Here after midi");
+
+  float val = constrain(map(analogRead(A0), 0, 1023, 0, 1000), 0, 1000)/1000.0f;
+
+  Serial.println(val);
+  player.set_dry_wet("KICK",val,1-val);
+  player.set_dry_wet("C1",val,1-val);
+
+
+
 
   // Debug outputk
   static unsigned long lastDebugTime = 0;
