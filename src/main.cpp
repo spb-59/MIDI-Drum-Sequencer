@@ -11,6 +11,7 @@
 #include <SD.h>
 #include <SPI.h>
 #include <SamplePlayer.h>
+#include <USB_MIDI.h>
 #include <SerialFlash.h>
 #include <Wire.h>
 #include <mtof.h>
