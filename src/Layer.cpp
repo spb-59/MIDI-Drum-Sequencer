@@ -7,7 +7,7 @@ Layer::Layer(Global* g,int i)
     global=g;
     LAYER_NUMBER=i;
     for (int i = 0; i < 16; i++) {
-        beats[i] = ButtonStatus::None;
+        beats[i] = ButtonStatus::Quad;
     }
     current_beat=0;
 
@@ -27,15 +27,39 @@ void Layer::update(){
  beats[i]= global->states.ringButtons[i].status ;
    }
 
+
+}
+void Layer::playBeat() {
+    divs[0] = divs[1] = divs[2] = divs[3] = false;
+
+    if (beats[current_beat] != ButtonStatus::None) {
+        switch (beats[current_beat]) {
+            case ButtonStatus::Pressed:
+                divs[0] = true;
+                break;
+            case ButtonStatus::Double:
+                divs[0] = true;
+                divs[2] = true;
+                break;
+            case ButtonStatus::Quad:
+                divs[0] = true;
+                divs[1] = true;
+                divs[2] = true;
+                divs[3] = true;
+                break;
+            default:
+                break;
+        }
+    } else {
+        usbMIDI.sendNoteOff(LAYER_NUMBER, 127, 1);
+    }
+
+    current_beat = (current_beat + 1) % 16;
 }
 
-void Layer::playBeat(){
-    if(beats[current_beat]!=ButtonStatus::None){
-        usbMIDI.sendNoteOn(LAYER_NUMBER,127,1);
-    }
-    else{
-          usbMIDI.sendNoteOff(LAYER_NUMBER,127,1); 
-    }
 
-    current_beat=(++current_beat)%16;
+void Layer::playDiv(int numDiv){
+    if (divs[numDiv]){
+          usbMIDI.sendNoteOn(LAYER_NUMBER,127,1); 
+    }
 }

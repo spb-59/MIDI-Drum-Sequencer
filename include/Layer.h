@@ -11,6 +11,7 @@ private:
   Global* global;
   int current_beat;
   ButtonStatus beats[16];
+  bool divs[4]={false,false,false,false};
 
 
 
@@ -23,5 +24,6 @@ public:
     void playBeat();
     void switchLayer();
     void update();
+    void playDiv(int numDiv);
 
 };

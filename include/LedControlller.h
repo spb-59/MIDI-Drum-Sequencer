@@ -15,11 +15,11 @@ public:
   void clear();
   void setBeatPos(int pos);
   void next_beat();
+  void render();
 
 private:
   CRGB leds[NUM_LEDS];
   CRGB currentState[NUM_LEDS];
   int beatPos = 0;
 
-  void render();
 };

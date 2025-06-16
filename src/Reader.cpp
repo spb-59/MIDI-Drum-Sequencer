@@ -1,6 +1,6 @@
 #include "Reader.h"
 
-int DEBOUNCE=1;
+int DEBOUNCE = 25;
 
 const char* statusToString(ButtonStatus status) {
   switch (status) {
@@ -49,19 +49,21 @@ void ButtonState::update(bool newState, unsigned long now) {
     status = ButtonStatus::Hold;
 }
 
-int readMux(int s0, int s1, int s2, int com, int channel) {
+int readMuxBase(int s0, int s1, int s2, int channel) {
   digitalWrite(s0, channel & 1);
   digitalWrite(s1, (channel >> 1) & 1);
   digitalWrite(s2, (channel >> 2) & 1);
-  delay(DEBOUNCE);
+  delayMicroseconds(DEBOUNCE);
+  return channel;
+}
+
+int readMux(int s0, int s1, int s2, int com, int channel) {
+  readMuxBase(s0, s1, s2, channel);
   return digitalRead(com);
 }
 
 int readMuxAnalog(int s0, int s1, int s2, int com, int channel) {
-  digitalWrite(s0, channel & 1);
-  digitalWrite(s1, (channel >> 1) & 1);
-  digitalWrite(s2, (channel >> 2) & 1);
-  delay(DEBOUNCE);
+  readMuxBase(s0, s1, s2, channel);
   return analogRead(com);
 }
 
@@ -80,9 +82,9 @@ void readControls(ControlsState& state) {
   scanMux(36, 37, 38, 35, ringTopRaw, 8);
   scanMuxAnalog(0, 1, 2, 23, state.pots, 4);
 
-  int topMap[8] = {14, 15, 0, 13, 1, 4, 2, 3};
-  int bottomMap[8] = {6, 7, 8, 5, 9, 12, 10, 11};
-  int layerMap[8] = {2, 1, 0, 3, 4, 7, 5, 6};
+  static const int topMap[8] = {14, 15, 0, 13, 1, 4, 2, 3};
+  static const int bottomMap[8] = {6, 7, 8, 5, 9, 12, 10, 11};
+  static const int layerMap[8] = {2, 1, 0, 3, 4, 7, 5, 6};
 
   unsigned long now = millis();
 
@@ -94,12 +96,9 @@ void readControls(ControlsState& state) {
 }
 
 void initPins() {
-  int outputPins[] = {3, 4, 5, 36, 37, 38, 39, 40, 41};
-  int inputPins[] = {11, 13, 35};
+  static const int outputPins[] = {3, 4, 5, 36, 37, 38, 39, 40, 41};
+  static const int inputPins[] = {11, 13, 35};
 
-  for (int i = 0; i < sizeof(outputPins) / sizeof(outputPins[0]); i++)
-    pinMode(outputPins[i], OUTPUT);
-
-  for (int i = 0; i < sizeof(inputPins) / sizeof(inputPins[0]); i++)
-    pinMode(inputPins[i], INPUT_PULLUP);
+  for (int pin : outputPins) pinMode(pin, OUTPUT);
+  for (int pin : inputPins) pinMode(pin, INPUT_PULLUP);
 }
