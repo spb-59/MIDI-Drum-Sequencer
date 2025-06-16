@@ -31,14 +31,29 @@ void Global::print_states() {
 void Global::update_states(){
     readControls(states);
 
+    bool reset=false;
+
     //check if layer has changed
     for (int i=0;i<8;i++){
-        if(states.layerButtons[i].status!=ButtonStatus::None){
+        if(states.layerButtons[i].status!=ButtonStatus::None && states.layerButtons[i].status!=ButtonStatus::Hold ){
             states.layerButtons[i].status=ButtonStatus::None;
             current_layer=i;
             layers[i]->switchLayer();
         }
+        if(states.layerButtons[i].status==ButtonStatus::Hold){
+            if (i==4) NUM_BEATS=1;
+            if (i==5) NUM_BEATS=2;
+            if (i==6) NUM_BEATS=4;
+            if (i==7) NUM_BEATS=8;
+            states.layerButtons[i].status=ButtonStatus::None;
+            reset=true;
+
+        }
     }
+
+    print_states();
+
+    BPM=map(states.pots[0],0,1023,50,300);
 
 
 

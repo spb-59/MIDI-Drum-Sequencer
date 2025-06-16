@@ -7,7 +7,7 @@ Layer::Layer(Global* g,int i)
     global=g;
     LAYER_NUMBER=i;
     for (int i = 0; i < 16; i++) {
-        beats[i] = ButtonStatus::Quad;
+        beats[i] = ButtonStatus::None;
     }
     current_beat=0;
 
@@ -50,8 +50,8 @@ void Layer::playBeat() {
             default:
                 break;
         }
-    } else {
-        usbMIDI.sendNoteOff(LAYER_NUMBER, 127, 1);
+    } else{
+         usbMIDI.sendNoteOff(LAYER_NUMBER,127,1); 
     }
 
     current_beat = (current_beat + 1) % 16;
@@ -60,6 +60,7 @@ void Layer::playBeat() {
 
 void Layer::playDiv(int numDiv){
     if (divs[numDiv]){
-          usbMIDI.sendNoteOn(LAYER_NUMBER,127,1); 
+        usbMIDI.sendNoteOff(LAYER_NUMBER,127,1); 
+        usbMIDI.sendNoteOn(LAYER_NUMBER,127,1); 
     }
 }

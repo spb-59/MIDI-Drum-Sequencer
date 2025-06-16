@@ -74,17 +74,22 @@ void scanMux(int s0, int s1, int s2, int com, int* states, int n) {
 void scanMuxAnalog(int s0, int s1, int s2, int com, int* values, int n) {
   for (int i = 0; i < n; i++) values[i] = readMuxAnalog(s0, s1, s2, com, i);
 }
-
 void readControls(ControlsState& state) {
-  int layerRaw[8], ringBottomRaw[8], ringTopRaw[8];
+  int layerRaw[8], ringBottomRaw[8], ringTopRaw[8], potsRaw[4];
   scanMux(3, 4, 5, 11, layerRaw, 8);
   scanMux(39, 40, 41, 13, ringBottomRaw, 8);
   scanMux(36, 37, 38, 35, ringTopRaw, 8);
-  scanMuxAnalog(0, 1, 2, 23, state.pots, 4);
+  scanMuxAnalog(0, 1, 2, 23, potsRaw, 4);  
 
   static const int topMap[8] = {14, 15, 0, 13, 1, 4, 2, 3};
   static const int bottomMap[8] = {6, 7, 8, 5, 9, 12, 10, 11};
   static const int layerMap[8] = {2, 1, 0, 3, 4, 7, 5, 6};
+  static const int potMap[4] = {2, 1, 0, 3};
+  
+
+  static int filteredPots[4] = {0, 0, 0, 0};
+
+  const float alpha = 0.05; 
 
   unsigned long now = millis();
 
@@ -92,6 +97,12 @@ void readControls(ControlsState& state) {
     state.ringButtons[topMap[i]].update(ringTopRaw[i], now);
     state.ringButtons[bottomMap[i]].update(ringBottomRaw[i], now);
     state.layerButtons[layerMap[i]].update(layerRaw[i], now);
+  }
+  
+  for (int i = 0; i < 4; i++) {
+    int reversedValue = 1023 - potsRaw[i];
+    filteredPots[i] = (alpha * reversedValue) + ((1 - alpha) * filteredPots[i]);
+    state.pots[potMap[i]] = filteredPots[i];
   }
 }
 
