@@ -12,11 +12,7 @@ private:
   int current_beat;
   ButtonStatus beats[16];
   bool divs[4]={false,false,false,false};
-
-
-
-
-
+  EncoderState layerEncoders[4];
    
 public:
     Layer(Global* g,int i);
@@ -26,5 +22,7 @@ public:
     void update();
     void playDiv(int numDiv);
     void reset();
+    void printLayerEncoders();
+    void sendEnc();
 
 };

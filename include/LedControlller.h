@@ -21,6 +21,6 @@ public:
 private:
   CRGB leds[NUM_LEDS];
   CRGB currentState[NUM_LEDS];
-  int beatPos = 0;
+  int beatPos = -1;
 
 };

@@ -1,14 +1,14 @@
-
 #include "Global.h"
 
-Global::Global(/* args */) {
+
+Global::Global(SamplePlayer* player){
+  player=player;
   initPins();
   readControls(states);
   for (int i=0;i<8;i++){
     layers[i]=new Layer(this,i);
   }
 }
-
 void Global::print_states() {
   Serial.println("Ring Buttons:");
   for (int i = 0; i < 16; i++) {
@@ -25,6 +25,12 @@ void Global::print_states() {
   Serial.println("Pots:");
   for (int i = 0; i < 4; i++) {
     Serial.print(states.pots[i]);
+    Serial.print(i < 3 ? ", " : "\n");
+  }
+  
+  Serial.println("Encoders:");
+  for (int i = 0; i < 4; i++) {
+    Serial.print(states.encoders[i].value);
     Serial.print(i < 3 ? ", " : "\n");
   }
 }
@@ -60,6 +66,9 @@ void Global::update_states(){
         resetLayers();
         current_layer=0;
         leds.reset();
+        clock_count=-1;
+        div_count=-1;
+
     }
 
 
@@ -70,6 +79,14 @@ void Global::resetLayers(){
       for (int i=0;i<8;i++){
     layers[i]->reset();
   }
+}
+
+void Global::print_all_layer_encoders() {
+  Serial.println("=== All Layer Encoder Values ===");
+  for (int i = 0; i < 8; i++) {
+    layers[i]->printLayerEncoders();
+  }
+  Serial.println("==============================");
 }
 
 Global::~Global() {}

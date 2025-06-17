@@ -21,7 +21,7 @@ void LEDController::setState(const CRGB* colors) {
 void LEDController::reset() {
   for (int i = 0; i < NUM_LEDS; i++) currentState[i] = CRGB::White;
   render();
-  beatPos = 0;
+  beatPos = -1;
   for (int i = 0; i < NUM_LEDS; i++) currentState[i] = CRGB::Black;
   render();
 }

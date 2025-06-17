@@ -1,5 +1,7 @@
 #include "Layer.h"
 #include "Global.h"
+#include <string>
+std::string sampleMap[] = {"KICK", "SNARE", "HAT", "HAT2", "BOP", "CHORD1", "CHORD2", "BACK"};
 
 
 Layer::Layer(Global* g,int i)
@@ -10,24 +12,30 @@ Layer::Layer(Global* g,int i)
         beats[i] = ButtonStatus::None;
     }
     current_beat=0;
-
-
+    
+    for (int i = 0; i < 4; i++) {
+        layerEncoders[i].value = 64;
+    }
 }
 
 void Layer::switchLayer(){
 for (int i = 0; i < 16; ++i) {
   global->states.ringButtons[i].status = beats[i];
    }
-    
-
-    
+   
+  for (int i = 0; i < 4; i++) {
+    global->states.encoders[i].value = layerEncoders[i].value;
+  }
 }
 void Layer::update(){
   for (int i = 0; i < 16; ++i) {
  beats[i]= global->states.ringButtons[i].status ;
    }
 
-
+  for (int i = 0; i < 4; i++) {
+    layerEncoders[i].value = global->states.encoders[i].value;
+  }
+  sendEnc();
 }
 void Layer::reset(){
     
@@ -64,11 +72,27 @@ void Layer::playBeat() {
 
     current_beat = (current_beat + 1) % 16;
 }
+void Layer::sendEnc(){
+    for (int i=0;i<4;i++) usbMIDI.sendControlChange(LAYER_NUMBER*4+i,layerEncoders[i].value,1);
+}
 
 
 void Layer::playDiv(int numDiv){
     if (divs[numDiv]){
+      if (global->mode==Mode::MIDI){
         usbMIDI.sendNoteOff(LAYER_NUMBER,127,1); 
-        usbMIDI.sendNoteOn(LAYER_NUMBER,127,1); 
+        usbMIDI.sendNoteOn(LAYER_NUMBER,127,1); }
+      else{
+        global->player->trigger(sampleMap[LAYER_NUMBER]);
+      }
     }
+}
+void Layer::printLayerEncoders() {
+  Serial.print("Layer ");
+  Serial.print(LAYER_NUMBER);
+  Serial.println(" Encoders:");
+  for (int i = 0; i < 4; i++) {
+    Serial.print(layerEncoders[i].value);
+    Serial.print(i < 3 ? ", " : "\n");
+  }
 }

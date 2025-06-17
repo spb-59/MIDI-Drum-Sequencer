@@ -11,6 +11,11 @@ class Instrument {
   AudioMixer4* final_mixer;
   AudioConnection** connections;
   AudioConnection* ampConnection;
+  AudioConnection left;
+  AudioConnection right;
+  float gain=25;
+  AudioOutputMQS  mqs;
+
 
  public:
   Instrument(int num_sources) {
@@ -36,14 +41,20 @@ class Instrument {
       connections[num_sources + i] = new AudioConnection(mixers[i], 0, *final_mixer, i);
       final_mixer->gain(i, 0.25f);
     }
+    output();
   }
 
-AudioAmplifier output(float gain=25) { 
+AudioAmplifier output() { 
 
     AudioAmplifier amp; 
     amp.gain(gain);
     ampConnection = new AudioConnection(*final_mixer, amp);
-    return amp; 
+
+    AudioConnection          patchCord1(amp, 0, mqs, 0);
+    AudioConnection          patchCord2(amp, 0, mqs, 1);
+    left=patchCord1;
+    right=patchCord2;
+
 }
 
   virtual ~Instrument() {
