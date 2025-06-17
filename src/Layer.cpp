@@ -29,6 +29,14 @@ void Layer::update(){
 
 
 }
+void Layer::reset(){
+    
+   for (int i = 0; i < 16; ++i) {
+ beats[i]= ButtonStatus::None ;
+   }
+   current_beat=0;
+  
+}
 void Layer::playBeat() {
     divs[0] = divs[1] = divs[2] = divs[3] = false;
 

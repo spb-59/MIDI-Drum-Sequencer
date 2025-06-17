@@ -35,11 +35,6 @@ void Global::update_states(){
 
     //check if layer has changed
     for (int i=0;i<8;i++){
-        if(states.layerButtons[i].status!=ButtonStatus::None && states.layerButtons[i].status!=ButtonStatus::Hold ){
-            states.layerButtons[i].status=ButtonStatus::None;
-            current_layer=i;
-            layers[i]->switchLayer();
-        }
         if(states.layerButtons[i].status==ButtonStatus::Hold){
             if (i==4) NUM_BEATS=1;
             if (i==5) NUM_BEATS=2;
@@ -47,17 +42,34 @@ void Global::update_states(){
             if (i==7) NUM_BEATS=8;
             states.layerButtons[i].status=ButtonStatus::None;
             reset=true;
-
+            break;
+        }
+        if(states.layerButtons[i].status!=ButtonStatus::None && states.layerButtons[i].status!=ButtonStatus::Hold ){
+            states.layerButtons[i].status=ButtonStatus::None;
+            current_layer=i;
+            layers[i]->switchLayer();
         }
     }
 
     print_states();
 
-    BPM=map(states.pots[0],0,1023,50,300);
+    BPM=map(states.pots[0],0,1023,50,350);
 
+
+    if (reset){
+        resetLayers();
+        current_layer=0;
+        leds.reset();
+    }
 
 
     
+}
+
+void Global::resetLayers(){
+      for (int i=0;i<8;i++){
+    layers[i]->reset();
+  }
 }
 
 Global::~Global() {}

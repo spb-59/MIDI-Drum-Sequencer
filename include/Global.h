@@ -9,6 +9,13 @@
 class Global {
  private:
   void update_states();
+  void resetLayers();
+
+  int clock_count=0;
+  int div_count = 0;
+  int NUM_BEATS=2;
+  int BPM=100;
+
 
  public:
   Global();
@@ -17,26 +24,20 @@ class Global {
   ControlsState states;
   LEDController leds;
   Layer* layers[8];
-  int NUM_BEATS=2;
-  int BPM=100;
 
 void loop() {
-  unsigned long t0 = micros();
+  // unsigned long t0 = micros();
 
   bool do_next = false;
 
   const int CLOCKS_PER_BEAT = 24;
   const unsigned long beat_us = 60000000UL / (BPM*NUM_BEATS);
   const unsigned long clock_us = beat_us / CLOCKS_PER_BEAT;
-
   static unsigned long lastTimestamp = 0;
-  static int clock_count = 0;
-  static int div_count = 0;
-
   unsigned long now = micros();
   if (lastTimestamp == 0) lastTimestamp = now;
 
-  unsigned long t1 = micros();
+  // unsigned long t1 = micros();
   //Serial.print("Setup: "); //Serial.print(t1 - t0); //Serial.println(" us");
 
   if ((long)(now - lastTimestamp) >= clock_us) {
@@ -52,19 +53,20 @@ void loop() {
     lastTimestamp += clock_us;
   }
 
-  unsigned long t2 = micros();
+  // unsigned long t2 = micros();
   //Serial.print("Timing block: "); //Serial.print(t2 - t1); //Serial.println(" us");
 
   update_states();
 
-  unsigned long t4 = micros();
+  // unsigned long t4 = micros();
   //Serial.print("update_states: "); //Serial.print(t4 - t2); //Serial.println(" us");
 
   layers[current_layer]->update();
 
-  unsigned long t5 = micros();
+  // unsigned long t5 = micros();
   //Serial.print("layer update: "); //Serial.print(t5 - t4); //Serial.println(" us");
 
+  // leds.setState(statesToColors(states.ringButtons));
   for (int button = 0; button < 16; button++) {
     leds.setLED(button, statusToColor(states.ringButtons[button].status));
   }
@@ -72,7 +74,7 @@ void loop() {
     leds.next_beat();
   }
   leds.render();
-  unsigned long t6 = micros();
+  // unsigned long t6 = micros();
   //Serial.print("setLEDs: "); //Serial.print(t6 - t5); //Serial.println(" us");
 
   //Serial.print("Total: "); //Serial.print(t6 - t0); //Serial.println(" us");

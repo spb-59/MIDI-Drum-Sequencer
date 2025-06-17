@@ -13,6 +13,8 @@ const char* statusToString(ButtonStatus status) {
   }
 }
 
+
+
 CRGB statusToColor(ButtonStatus status) {
   switch (status) {
     case ButtonStatus::Pressed: return CRGB::Green;
@@ -49,6 +51,13 @@ void ButtonState::update(bool newState, unsigned long now) {
     status = ButtonStatus::Hold;
 }
 
+CRGB* statesToColors(ButtonState* states , int num=16){
+  CRGB ret[num];
+  for(int i=0;i<num;i++){
+    ret[i]=statusToColor(states[i].status);
+  }
+  return ret;
+}
 int readMuxBase(int s0, int s1, int s2, int channel) {
   digitalWrite(s0, channel & 1);
   digitalWrite(s1, (channel >> 1) & 1);
@@ -89,7 +98,7 @@ void readControls(ControlsState& state) {
 
   static int filteredPots[4] = {0, 0, 0, 0};
 
-  const float alpha = 0.05; 
+  const float alpha = 0.2; 
 
   unsigned long now = millis();
 

@@ -13,6 +13,7 @@ public:
   void setState(const CRGB* colors);
   void setLED(int index, CRGB color);
   void clear();
+  void reset();
   void setBeatPos(int pos);
   void next_beat();
   void render();

@@ -9,13 +9,14 @@ const char* statusToString(ButtonStatus status);
 CRGB statusToColor(ButtonStatus status);
 
 struct ButtonState {
-  int current = 1, previous = 1;
-  unsigned long lastChangeTime = 0, lastPressTime = 0;
-  int pressCount = 0;
-  ButtonStatus status = ButtonStatus::None;
-
-  void update(bool newState, unsigned long now);
+    int current = 1, previous = 1;
+    unsigned long lastChangeTime = 0, lastPressTime = 0;
+    int pressCount = 0;
+    ButtonStatus status = ButtonStatus::None;
+    
+    void update(bool newState, unsigned long now);
 };
+CRGB* statesToColors(ButtonState* status, int num=16);
 
 struct ControlsState {
   ButtonState ringButtons[16];

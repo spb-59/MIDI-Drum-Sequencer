@@ -25,5 +25,6 @@ public:
     void switchLayer();
     void update();
     void playDiv(int numDiv);
+    void reset();
 
 };
