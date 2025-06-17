@@ -1,5 +1,14 @@
 #include "Reader.h"
 
+// Global encoder objects and tracking values
+Encoder encoderObjs[4] = {
+    Encoder(APins[0], BPins[0]),
+    Encoder(APins[1], BPins[1]),
+    Encoder(APins[2], BPins[2]),
+    Encoder(APins[3], BPins[3])
+};
+long lastRawValues[4] = {0, 0, 0, 0};
+
 int DEBOUNCE = 25;
 
 const char* statusToString(ButtonStatus status) {
@@ -113,12 +122,54 @@ void readControls(ControlsState& state) {
     filteredPots[i] = (alpha * reversedValue) + ((1 - alpha) * filteredPots[i]);
     state.pots[potMap[i]] = filteredPots[i];
   }
+  
+  // Read encoders
+  for (int i = 0; i < 4; i++) {
+    long position = encoderObjs[i].read();
+    state.encoders[i].update(position, lastRawValues[i], 2);
+  }
 }
 
 void initPins() {
-  static const int outputPins[] = {3, 4, 5, 36, 37, 38, 39, 40, 41};
-  static const int inputPins[] = {11, 13, 35};
+  // Setup mux control pins as output
+  pinMode(0, OUTPUT);
+  pinMode(1, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(36, OUTPUT);
+  pinMode(37, OUTPUT);
+  pinMode(38, OUTPUT);
+  pinMode(39, OUTPUT);
+  pinMode(40, OUTPUT);
+  pinMode(41, OUTPUT);
+  
+  // Setup pins connected to the common pin of the mux as input
+  pinMode(11, INPUT_PULLUP);  
+  pinMode(35, INPUT_PULLUP);
+  pinMode(13, INPUT_PULLUP);
+  pinMode(23, INPUT);
+  
+  // Setup encoder pins
+  for (int i = 0; i < 4; i++) {
+    pinMode(APins[i], INPUT_PULLUP);
+    pinMode(BPins[i], INPUT_PULLUP);
+    encoderObjs[i].write(0);
+    lastRawValues[i] = 0;
+  }
+}
 
-  for (int pin : outputPins) pinMode(pin, OUTPUT);
-  for (int pin : inputPins) pinMode(pin, INPUT_PULLUP);
+// Encoder state update implementation
+void EncoderState::update(long rawPosition, long& lastRawValue, int sensitivity) {
+  int diff = rawPosition - lastRawValue;
+  
+  if (abs(diff) >= sensitivity) {
+    int steps = diff / sensitivity;
+    
+    int newValue = value + steps;
+    value = constrain(newValue, 0, 127);
+    
+    lastRawValue = rawPosition - (diff % sensitivity);
+  }
 }

@@ -5,21 +5,29 @@
 #include "Layer.h"
 #include "LedControlller.h"
 #include "Reader.h"
+#include "SamplePlayer.h"
 
+enum class Mode{
+  MIDI,OUT
+};
 class Global {
  private:
   void update_states();
   void resetLayers();
 
-  int clock_count=0;
-  int div_count = 0;
+  int clock_count=-1;
+  int div_count = -1;
   int NUM_BEATS=2;
   int BPM=100;
-
-
- public:
-  Global();
+  
+  
+  
+  public:
+  SamplePlayer* player=nullptr;
+  Mode mode=Mode::OUT;
+  Global(SamplePlayer* player);
   void print_states();
+  void print_all_layer_encoders();
   int current_layer = 0;
   ControlsState states;
   LEDController leds;
@@ -44,7 +52,9 @@ void loop() {
     clock_count = (clock_count + 1) % CLOCKS_PER_BEAT;
     if (clock_count == 0) {
       for (int i = 0; i < 8; i++) layers[i]->playBeat();
-      do_next = true;
+    }
+    if (clock_count==0){
+      do_next=true;// to improve visual feedback
     }
     if (clock_count % 6 == 0) {
       div_count = (div_count + 1) % 4;
