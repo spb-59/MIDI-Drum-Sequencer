@@ -13,6 +13,7 @@ private:
   ButtonStatus beats[16];
   bool divs[4]={false,false,false,false};
   EncoderState layerEncoders[4];
+  int previousEncoderValues[4] = {64, 64, 64, 64};
    
 public:
     Layer(Global* g,int i);

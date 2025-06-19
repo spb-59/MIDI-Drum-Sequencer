@@ -2,7 +2,7 @@
 
 
 Global::Global(SamplePlayer* player){
-  player=player;
+  this->player=player;
   initPins();
   readControls(states);
   for (int i=0;i<8;i++){
@@ -41,7 +41,7 @@ void Global::update_states(){
 
     //check if layer has changed
     for (int i=0;i<8;i++){
-        if(states.layerButtons[i].status==ButtonStatus::Hold){
+        if(i>=4 && states.layerButtons[i].status==ButtonStatus::Hold){
             if (i==4) NUM_BEATS=1;
             if (i==5) NUM_BEATS=2;
             if (i==6) NUM_BEATS=4;
@@ -60,6 +60,14 @@ void Global::update_states(){
     print_states();
 
     BPM=map(states.pots[0],0,1023,50,350);
+    RAND_TIMING=map(states.pots[1],0,1023,0,99);
+    RAND_VELO=map(states.pots[2],0,1023,0,99);
+    int knob3=map(states.pots[3],0,1023,0,127);
+
+    player->set_amp_gain(knob3);
+    // usbMIDI.sendControlChange(7,knob3,1);
+   
+    
 
 
     if (reset){

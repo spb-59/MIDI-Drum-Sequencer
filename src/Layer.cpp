@@ -72,17 +72,33 @@ void Layer::playBeat() {
 
     current_beat = (current_beat + 1) % 16;
 }
-void Layer::sendEnc(){
-    for (int i=0;i<4;i++) usbMIDI.sendControlChange(LAYER_NUMBER*4+i,layerEncoders[i].value,1);
+void Layer::sendEnc() {
+    for (int i=1; i<4; i++) {
+        if (layerEncoders[i].value != previousEncoderValues[i]) {
+            usbMIDI.sendControlChange(14+LAYER_NUMBER*4+i, layerEncoders[i].value, 1);
+            previousEncoderValues[i] = layerEncoders[i].value;
+        }
+    }
+    
+    if (global->mode==Mode::OUT) {
+      std::string name=sampleMap[LAYER_NUMBER];
+      global->player->set_gain(name,layerEncoders[0].value);
+      global->player->set_bitcrusher(name,layerEncoders[1].value);
+      global->player->set_dry_wet(name,layerEncoders[2].value);
+      global->player->set_filter_frequency(name,layerEncoders[3].value);
+    }
 }
-
 
 void Layer::playDiv(int numDiv){
     if (divs[numDiv]){
-      if (global->mode==Mode::MIDI){
-        usbMIDI.sendNoteOff(LAYER_NUMBER,127,1); 
-        usbMIDI.sendNoteOn(LAYER_NUMBER,127,1); }
+    int velo_off=global->RAND_VELO>random(100)? map(random(10),0,9,25,50):0;
+     velo_off*=random(2)>0?-1:1;
+     int velo=constrain(layerEncoders[0].value+velo_off,0,127);
+    if (global->mode==Mode::MIDI){
+        usbMIDI.sendNoteOff(LAYER_NUMBER,velo,1); 
+        usbMIDI.sendNoteOn(LAYER_NUMBER,velo,1); }
       else{
+        global->player->set_gain(sampleMap[LAYER_NUMBER],constrain(velo,0,127));
         global->player->trigger(sampleMap[LAYER_NUMBER]);
       }
     }

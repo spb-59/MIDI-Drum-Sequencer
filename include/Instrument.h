@@ -10,9 +10,10 @@ class Instrument {
   AudioMixer4* mixers;
   AudioMixer4* final_mixer;
   AudioConnection** connections;
+  AudioAmplifier amp;
   AudioConnection* ampConnection;
-  AudioConnection left;
-  AudioConnection right;
+  AudioConnection* leftConn;
+  AudioConnection* rightConn;
   float gain=25;
   AudioOutputMQS  mqs;
 
@@ -21,6 +22,9 @@ class Instrument {
   Instrument(int num_sources) {
     this->num_sources = num_sources;
     sources = new AudioStream*[num_sources];
+    leftConn = nullptr;
+    rightConn = nullptr;
+    ampConnection = nullptr;
     for (int i = 0; i < num_sources; i++) sources[i] = nullptr;
   }
 
@@ -41,21 +45,21 @@ class Instrument {
       connections[num_sources + i] = new AudioConnection(mixers[i], 0, *final_mixer, i);
       final_mixer->gain(i, 0.25f);
     }
-    output();
+    setup_output();
   }
 
-AudioAmplifier output() { 
-
-    AudioAmplifier amp; 
+  void setup_output() {
     amp.gain(gain);
-    ampConnection = new AudioConnection(*final_mixer, amp);
+    ampConnection = new AudioConnection(*final_mixer, 0, amp, 0);
+    
+    leftConn = new AudioConnection(amp, 0, mqs, 0);
+    rightConn = new AudioConnection(amp, 0, mqs, 1);
+  }
 
-    AudioConnection          patchCord1(amp, 0, mqs, 0);
-    AudioConnection          patchCord2(amp, 0, mqs, 1);
-    left=patchCord1;
-    right=patchCord2;
-
-}
+  void set_amp_gain( float _gain) {
+    _gain =map(_gain,0,127,10,30);
+      this->gain=_gain;
+  }
 
   virtual ~Instrument() {
     delete[] sources;
@@ -63,5 +67,8 @@ AudioAmplifier output() {
     for (int i = 0; i < num_sources + num_mixers; i++) delete connections[i];
     delete[] connections;
     delete final_mixer;
+    delete ampConnection;
+    delete leftConn;
+    delete rightConn;
   }
 };

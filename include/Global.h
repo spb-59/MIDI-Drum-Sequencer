@@ -19,12 +19,14 @@ class Global {
   int div_count = -1;
   int NUM_BEATS=2;
   int BPM=100;
+  int RAND_TIMING=0;
+  
   
   
   
   public:
   SamplePlayer* player=nullptr;
-  Mode mode=Mode::OUT;
+  Mode mode=Mode::MIDI;
   Global(SamplePlayer* player);
   void print_states();
   void print_all_layer_encoders();
@@ -32,6 +34,8 @@ class Global {
   ControlsState states;
   LEDController leds;
   Layer* layers[8];
+  int RAND_VELO=0;
+
 
 void loop() {
   // unsigned long t0 = micros();
@@ -48,7 +52,18 @@ void loop() {
   // unsigned long t1 = micros();
   //Serial.print("Setup: "); //Serial.print(t1 - t0); //Serial.println(" us");
 
-  if ((long)(now - lastTimestamp) >= clock_us) {
+  long time_off = 0;
+  if (RAND_TIMING > 0) {
+
+    if (random(100) < RAND_TIMING) {
+
+      int max_offset = map(RAND_TIMING, 1, 100, 200, 600);
+      time_off = map(random(10), 0, 9, 0, max_offset);
+      time_off *= random(2) > 0 ? -1 : 1;
+    }
+  }
+
+  if ((long)(now+time_off - lastTimestamp) >= clock_us) {
     clock_count = (clock_count + 1) % CLOCKS_PER_BEAT;
     if (clock_count == 0) {
       for (int i = 0; i < 8; i++) layers[i]->playBeat();
