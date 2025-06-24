@@ -63,7 +63,7 @@ void loop() {
     }
   }
 
-  if ((long)(now+time_off - lastTimestamp) >= clock_us) {
+  if ((long)(now - (lastTimestamp+time_off)) >= clock_us) {
     clock_count = (clock_count + 1) % CLOCKS_PER_BEAT;
     if (clock_count == 0) {
       for (int i = 0; i < 8; i++) layers[i]->playBeat();
@@ -71,10 +71,9 @@ void loop() {
     if (clock_count==0){
       do_next=true;// to improve visual feedback
     }
-    if (clock_count % 6 == 0) {
-      div_count = (div_count + 1) % 4;
-      for (int i = 0; i < 8; i++) layers[i]->playDiv(div_count);
-    }
+    // Call playDiv on every clock pulse
+    div_count = (div_count + 1) % 24;
+    for (int i = 0; i < 8; i++) layers[i]->playDiv(div_count);
     lastTimestamp += clock_us;
   }
 

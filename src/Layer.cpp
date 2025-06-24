@@ -7,11 +7,15 @@ std::string sampleMap[] = {"KICK", "SNARE", "HAT", "HAT2", "BOP", "CHORD1", "CHO
 Layer::Layer(Global* g,int i)
 {
     global=g;
-    LAYER_NUMBER=i;
+    LAYER_NUMBER=i+36;
     for (int i = 0; i < 16; i++) {
         beats[i] = ButtonStatus::None;
     }
     current_beat=0;
+    
+    for (int i = 0; i < 24; i++) {
+        divs[i] = false;
+    }
     
     for (int i = 0; i < 4; i++) {
         layerEncoders[i].value = 64;
@@ -46,7 +50,10 @@ void Layer::reset(){
   
 }
 void Layer::playBeat() {
-    divs[0] = divs[1] = divs[2] = divs[3] = false;
+    // Clear all 24 divisions
+    for (int i = 0; i < 24; i++) {
+        divs[i] = false;
+    }
 
     if (beats[current_beat] != ButtonStatus::None) {
         switch (beats[current_beat]) {
@@ -55,13 +62,23 @@ void Layer::playBeat() {
                 break;
             case ButtonStatus::Double:
                 divs[0] = true;
-                divs[2] = true;
+                divs[12] = true;
+                break;
+            case ButtonStatus::Triple:
+                divs[0] = true;
+                divs[8] = true;
+                divs[16] = true;
                 break;
             case ButtonStatus::Quad:
                 divs[0] = true;
-                divs[1] = true;
-                divs[2] = true;
-                divs[3] = true;
+                divs[6] = true;
+                divs[12] = true;
+                divs[18] = true;
+                break;
+            case ButtonStatus::Hold:
+                for (int i = 0; i < 24; i += 4) {
+                    divs[i] = true;
+                }
                 break;
             default:
                 break;

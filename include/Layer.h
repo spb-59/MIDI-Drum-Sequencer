@@ -11,7 +11,7 @@ private:
   Global* global;
   int current_beat;
   ButtonStatus beats[16];
-  bool divs[4]={false,false,false,false};
+  bool divs[24] = {false};
   EncoderState layerEncoders[4];
   int previousEncoderValues[4] = {64, 64, 64, 64};
    
