@@ -24,7 +24,7 @@ Global global(&player);
 void setup() {
   Serial.begin(9600);
   AudioMemory(256);
-    player.add_sample("KICK", AudioSampleKick);
+  player.add_sample("KICK", AudioSampleKick);
   player.add_sample("SNARE", AudioSampleSnare);
   player.add_sample("HAT", AudioSampleHat);
   player.add_sample("HAT2", AudioSampleHat2);
@@ -32,6 +32,10 @@ void setup() {
   player.add_sample("CHORD1", AudioSampleChord1);
   player.add_sample("CHORD2", AudioSampleChord2);
 
+  usbMIDI.setHandleClock([]() { global.handleMidiClock(); });
+  usbMIDI.setHandleStart([]() { global.handleMidiStart(); });
+  usbMIDI.setHandleStop([]() { global.handleMidiStop(); });
+  usbMIDI.setHandleContinue([]() { global.handleMidiContinue(); });
 }
 
 void loop() {
