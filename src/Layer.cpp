@@ -50,39 +50,27 @@ void Layer::reset(){
       beats[i] = ButtonStatus::None;
     }
    
-    // Clear all division markers
     for (int i = 0; i < 24; i++) {
       divs[i] = false;
     }
    
-    // Reset beat position
+
     current_beat = 0;
-   
-    // Make sure any playing notes are turned off
-    if (global->mode == Mode::MIDI) {
-      usbMIDI.sendNoteOff(LAYER_NUMBER, 0, 1);
-      usbMIDI.send_now();
-    }
-    
-    // Set default encoder values if needed
-    if (layerEncoders[0].value < 1 || layerEncoders[0].value > 127) {
-      layerEncoders[0].value = 64; // Default velocity to middle value
-    }
-    
-    // Reset previous encoder values
+
+
     for (int i = 0; i < 4; i++) {
       previousEncoderValues[i] = layerEncoders[i].value;
     }
     
-    sendEnc(); // Send encoder values via MIDI
+    sendEnc(); 
 }
 void Layer::playBeat() {
-    // First, clear all 24 divisions
+
     for (int i = 0; i < 24; i++) {
         divs[i] = false;
     }
     
-    // Debug the current beat with corrected layer number
+    
     Serial.print("Layer ");
     Serial.print(LAYER_NUMBER - 36);
     Serial.print(" Beat ");
@@ -90,7 +78,7 @@ void Layer::playBeat() {
     Serial.print(" Status: ");
     Serial.println((int)beats[current_beat]);
 
-    // Set up new divisions based on the current beat
+    
     if (beats[current_beat] != ButtonStatus::None) {
         switch (beats[current_beat]) {
             case ButtonStatus::Pressed:
@@ -125,8 +113,8 @@ void Layer::playBeat() {
                 break;
         }
         
-        // For active beats, we'll immediately trigger division 0
-        // This ensures that notes play immediately on the beat
+        
+        
         if (divs[0] && global->mode == Mode::MIDI) {
             int velo = constrain(layerEncoders[0].value, 1, 127);
             Serial.print("  Immediate trigger: Note ");
@@ -138,11 +126,11 @@ void Layer::playBeat() {
             usbMIDI.sendNoteOn(LAYER_NUMBER, velo, 1);
             usbMIDI.send_now();
             
-            // We've handled division 0, so clear it
+            
             divs[0] = false;
         }
     } else {
-        // Make sure note is off for empty beats
+       
         if (global->mode == Mode::MIDI) {
             usbMIDI.sendNoteOff(LAYER_NUMBER, 0, 1);
             usbMIDI.send_now();
@@ -151,7 +139,7 @@ void Layer::playBeat() {
         }
     }
 
-    // Move to next beat
+    
     current_beat = (current_beat + 1) % 16;
 }
 void Layer::sendEnc() {
@@ -176,26 +164,24 @@ void Layer::sendEnc() {
 }
 
 void Layer::playDiv(int numDiv){
-    // Check if this division should play a note
+    
     if (divs[numDiv]){
         int velo_off = (int)global->RAND_VELO > (int)random(100) ? map(random(10), 0, 9, 25, 50) : 0;
         velo_off *= (int)random(2) > 0 ? -1 : 1;
         int velo = constrain(layerEncoders[0].value + velo_off, 0, 127);
         
         if (global->mode == Mode::MIDI) {
-            // Debug print to verify MIDI notes are sent
+            
             Serial.print("MIDI Note: Layer ");
-            Serial.print(LAYER_NUMBER - 36);  // Subtract 36 to show layer number 0-7 instead of MIDI note number
+            Serial.print(LAYER_NUMBER - 36);  
             Serial.print(" (Note ");
             Serial.print(LAYER_NUMBER);
             Serial.print("), Velocity: ");
             Serial.println(velo);
             
-            // Send MIDI messages
             usbMIDI.sendNoteOff(LAYER_NUMBER, 0, 1);
             usbMIDI.sendNoteOn(LAYER_NUMBER, velo, 1);
             
-            // Force immediate send
             usbMIDI.send_now();
         } else {
             int sampleIndex = LAYER_NUMBER - 36;
@@ -205,8 +191,7 @@ void Layer::playDiv(int numDiv){
             }
         }
         
-        // Don't reset the division flag yet - let it be reset by playBeat on the next step
-    }
+          }
 }
 
 void Layer::printLayerEncoders() {

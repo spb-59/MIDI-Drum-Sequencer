@@ -16,7 +16,7 @@ class SamplePlayer : public Instrument {
   AudioFilterStateVariable** filters;  
   AudioEffectReverb** reverbs;
   AudioMixer4** mixers;
-  AudioMixer4** bitcrusher_mixers; // Mixers for bitcrusher dry/wet
+  AudioMixer4** bitcrusher_mixers;
   AudioConnection** connections;
 
   std::unordered_map<std::string, const unsigned int*> samples;
@@ -69,13 +69,13 @@ class SamplePlayer : public Instrument {
       connections[i * 8 + 6] = new AudioConnection(*filters[i], 0, *mixers[i], 0);
       connections[i * 8 + 7] = new AudioConnection(*reverbs[i], 0, *mixers[i], 1);
 
-      // Default to 0% wet for bitcrusher (clean signal only)
-      bitcrusher_mixers[i]->gain(0, 1.0f); // Dry (clean)
-      bitcrusher_mixers[i]->gain(1, 0.0f); // Wet (bitcrushed)
 
-      // Default to 0% wet for reverb
-      mixers[i]->gain(0, 1.0f); // Dry (no reverb)
-      mixers[i]->gain(1, 0.0f); // Wet (reverb)
+      bitcrusher_mixers[i]->gain(0, 1.0f); // Dry 
+      bitcrusher_mixers[i]->gain(1, 0.0f); // Wet 
+
+
+      mixers[i]->gain(0, 1.0f); // Dry 
+      mixers[i]->gain(1, 0.0f); // Wet 
 
       sources[i] = mixers[i];
     }
@@ -103,13 +103,13 @@ class SamplePlayer : public Instrument {
     auto it = sample_index.find(name);
     if (it == sample_index.end()) return;
     
-    // Use value as wet/dry control
+
     float wet = constrain(value, 0, 127) / 127.0f;
     float dry = 1.0f - wet;
     
-    // Set the mix in the bitcrusher mixer
-    bitcrusher_mixers[it->second]->gain(0, dry);  // dry signal
-    bitcrusher_mixers[it->second]->gain(1, wet);  // wet (bitcrushed) signal
+
+    bitcrusher_mixers[it->second]->gain(0, dry);  // dry 
+    bitcrusher_mixers[it->second]->gain(1, wet);  // wet 
   }
 
   void add_sample(const std::string& name, const unsigned int* data) {
@@ -149,8 +149,8 @@ class SamplePlayer : public Instrument {
     float wet = constrain(wetValue, 0, 127) / 127.0f;
     float dry = 1.0f - wet;
     
-    mixers[it->second]->gain(0, dry);  // dry signal
-    mixers[it->second]->gain(1, wet);  // wet (reverb) signal
+    mixers[it->second]->gain(0, dry);  // dry 
+    mixers[it->second]->gain(1, wet);  // wet 
   }
 
   ~SamplePlayer() {

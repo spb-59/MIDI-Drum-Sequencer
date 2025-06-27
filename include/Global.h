@@ -25,7 +25,7 @@ class Global {
   unsigned long last_midi_clock_time = 0;
   float midi_bpm = 120.0f;
   int midi_clock_counter = 0;
-  bool use_midi_clock = true;  // Default to using MIDI clock when available
+  bool use_midi_clock = true;
   
   public:
   SamplePlayer* player=nullptr;
@@ -82,20 +82,10 @@ void loop() {
     }
   }
 
-  // unsigned long t2 = micros();
-  //Serial.print("Timing block: "); //Serial.print(t2 - t1); //Serial.println(" us");
-
   update_states();
-
-  // unsigned long t4 = micros();
-  //Serial.print("update_states: "); //Serial.print(t4 - t2); //Serial.println(" us");
 
   layers[current_layer]->update();
 
-  // unsigned long t5 = micros();
-  //Serial.print("layer update: "); //Serial.print(t5 - t4); //Serial.println(" us");
-
-  // leds.setState(statesToColors(states.ringButtons));
   for (int button = 0; button < 16; button++) {
     leds.setLED(button, statusToColor(states.ringButtons[button].status));
   }
@@ -103,11 +93,6 @@ void loop() {
     leds.next_beat();
   }
   leds.render();
-  // unsigned long t6 = micros();
-  //Serial.print("setLEDs: "); //Serial.print(t6 - t5); //Serial.println(" us");
-
-  //Serial.print("Total: "); //Serial.print(t6 - t0); //Serial.println(" us");
-  //Serial.println("---");
 }
 
 

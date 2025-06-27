@@ -40,9 +40,7 @@ void setup() {
 }
 
 void loop() {
-  // Make sure to process MIDI messages first
   usbMIDI.read();
   
-  // Then run the main loop
   global.loop();
 }

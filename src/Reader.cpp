@@ -1,6 +1,6 @@
 #include "Reader.h"
 
-// Global encoder objects and tracking values
+
 Encoder encoderObjs[4] = {
     Encoder(APins[0], BPins[0]),
     Encoder(APins[1], BPins[1]),
@@ -151,7 +151,7 @@ void initPins() {
   pinMode(13, INPUT_PULLUP);
   pinMode(23, INPUT);
   
-  // Setup encoder pins
+
   for (int i = 0; i < 4; i++) {
     pinMode(APins[i], INPUT_PULLUP);
     pinMode(BPins[i], INPUT_PULLUP);
@@ -160,7 +160,7 @@ void initPins() {
   }
 }
 
-// Encoder state update implementation
+
 void EncoderState::update(long rawPosition, long& lastRawValue, int sensitivity) {
   int diff = rawPosition - lastRawValue;
   
