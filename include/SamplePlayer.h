@@ -16,6 +16,7 @@ class SamplePlayer : public Instrument {
   AudioFilterStateVariable** filters;  
   AudioEffectReverb** reverbs;
   AudioMixer4** mixers;
+  AudioMixer4** bitcrusher_mixers; // Mixers for bitcrusher dry/wet
   AudioConnection** connections;
 
   std::unordered_map<std::string, const unsigned int*> samples;
@@ -31,7 +32,8 @@ class SamplePlayer : public Instrument {
     filters = new AudioFilterStateVariable*[num_sources];  
     reverbs = new AudioEffectReverb*[num_sources];
     mixers = new AudioMixer4*[num_sources];
-    connections = new AudioConnection*[num_sources * 6];
+    bitcrusher_mixers = new AudioMixer4*[num_sources];
+    connections = new AudioConnection*[num_sources * 8]; // Increased connections count
 
     for (int i = 0; i < num_sources; i++) {
       players[i] = new AudioPlayMemory();
@@ -40,26 +42,40 @@ class SamplePlayer : public Instrument {
       filters[i] = new AudioFilterStateVariable(); 
       reverbs[i] = new AudioEffectReverb();
       mixers[i] = new AudioMixer4();
+      bitcrusher_mixers[i] = new AudioMixer4();
 
       amps[i]->gain(1.0f);
-      bitcrushers[i]->bits(16);
-      bitcrushers[i]->sampleRate(44100);
+      bitcrushers[i]->bits(4);
+      bitcrushers[i]->sampleRate(8000);
       filters[i]->frequency(20000); 
       filters[i]->resonance(0.7);   
       reverbs[i]->reverbTime(0.5f);
 
-      connections[i * 6 + 0] = new AudioConnection(*players[i], 0, *amps[i], 0);
-      connections[i * 6 + 1] = new AudioConnection(*amps[i], 0, *bitcrushers[i], 0);
-      connections[i * 6 + 2] = new AudioConnection(*bitcrushers[i], 0, *filters[i], 0);
-      connections[i * 6 + 3] = new AudioConnection(*filters[i], 0, *reverbs[i], 0);
-      connections[i * 6 + 4] = new AudioConnection(*filters[i], 0, *mixers[i], 0);
-      connections[i * 6 + 5] = new AudioConnection(*reverbs[i], 0, *mixers[i], 1);
+      // Set up connections with parallel path for bitcrusher
+      connections[i * 8 + 0] = new AudioConnection(*players[i], 0, *amps[i], 0);
+      
+      // Clean path to bitcrusher mixer (input 0)
+      connections[i * 8 + 1] = new AudioConnection(*amps[i], 0, *bitcrusher_mixers[i], 0);
+      
+      // Processed path through bitcrusher to mixer (input 1)
+      connections[i * 8 + 2] = new AudioConnection(*amps[i], 0, *bitcrushers[i], 0);
+      connections[i * 8 + 3] = new AudioConnection(*bitcrushers[i], 0, *bitcrusher_mixers[i], 1);
+      
+      // From bitcrusher mixer to filter
+      connections[i * 8 + 4] = new AudioConnection(*bitcrusher_mixers[i], 0, *filters[i], 0);
+      
+      // Filter to reverb and mixer
+      connections[i * 8 + 5] = new AudioConnection(*filters[i], 0, *reverbs[i], 0);
+      connections[i * 8 + 6] = new AudioConnection(*filters[i], 0, *mixers[i], 0);
+      connections[i * 8 + 7] = new AudioConnection(*reverbs[i], 0, *mixers[i], 1);
 
+      // Default to 0% wet for bitcrusher (clean signal only)
+      bitcrusher_mixers[i]->gain(0, 1.0f); // Dry (clean)
+      bitcrusher_mixers[i]->gain(1, 0.0f); // Wet (bitcrushed)
 
-connections[i * 1 + 0] = new AudioConnection(*players[i], 0, *mixers[i], 0);
-
-      mixers[i]->gain(0, 1.0f);
-      mixers[i]->gain(1, 0.0f);
+      // Default to 0% wet for reverb
+      mixers[i]->gain(0, 1.0f); // Dry (no reverb)
+      mixers[i]->gain(1, 0.0f); // Wet (reverb)
 
       sources[i] = mixers[i];
     }
@@ -71,20 +87,15 @@ connections[i * 1 + 0] = new AudioConnection(*players[i], 0, *mixers[i], 0);
     gain = constrain(gain,0,127) / 127.0f;
     auto it = sample_index.find(name);
     if (it == sample_index.end()) return;
-    amps[it->second]->gain(gain);
+    mixers[it->second]->gain(0, gain);
   }
 
   void set_filter_frequency(const std::string& name, float value) {
     auto it = sample_index.find(name);
     if (it == sample_index.end()) return;
     
-    const float min_freq = 80.0f;   
-    const float max_freq = 18000.0f; 
-    
-    float normalized = value / 127.0f;
-    
-    float freq = normalized*min_freq/max_freq;
-    
+    // Scale the value between 50 and 20000 Hz (typical filter range)
+    float freq = map(constrain(value, 0, 127), 0, 127, 50, 20000);
     filters[it->second]->frequency(freq);
   }
 
@@ -92,16 +103,13 @@ connections[i * 1 + 0] = new AudioConnection(*players[i], 0, *mixers[i], 0);
     auto it = sample_index.find(name);
     if (it == sample_index.end()) return;
     
-    value = constrain(value, 0, 127);
-    float normalized = value / 127.0f;
+    // Use value as wet/dry control
+    float wet = constrain(value, 0, 127) / 127.0f;
+    float dry = 1.0f - wet;
     
-    int bits = 16 - (int)(normalized * 12.0f);
-    
-    float sampleRate = 44100.0f * pow(0.045f, normalized);
-    sampleRate = constrain(sampleRate, 2000.0f, 44100.0f);
-    
-    bitcrushers[it->second]->bits(bits);
-    bitcrushers[it->second]->sampleRate((int)sampleRate);
+    // Set the mix in the bitcrusher mixer
+    bitcrusher_mixers[it->second]->gain(0, dry);  // dry signal
+    bitcrusher_mixers[it->second]->gain(1, wet);  // wet (bitcrushed) signal
   }
 
   void add_sample(const std::string& name, const unsigned int* data) {
@@ -130,22 +138,19 @@ connections[i * 1 + 0] = new AudioConnection(*players[i], 0, *mixers[i], 0);
     auto it = sample_index.find(name);
     if (it == sample_index.end()) return;
     
-    float reverbTime = 1;
+    float reverbTime = constrain(value, 0, 127) / 127.0f * 5.0f; // Scale to 0-5 seconds
     reverbs[it->second]->reverbTime(reverbTime);
   }
   
   void set_dry_wet(const std::string& name, float wetValue) {
-      auto it = sample_index.find(name);
-      if (it == sample_index.end()) return;
+    auto it = sample_index.find(name);
+    if (it == sample_index.end()) return;
     
-      wetValue = constrain(wetValue, 0, 127);
-      
-      // Map 0-127 to 0-0.7 for wet
-      float wet = (wetValue / 127.0f) * 0.7f;
-      float dry = 1.0f;  // Keep dry signal at full volume
-      
-      mixers[it->second]->gain(0, dry);
-      mixers[it->second]->gain(1, wet);
+    float wet = constrain(wetValue, 0, 127) / 127.0f;
+    float dry = 1.0f - wet;
+    
+    mixers[it->second]->gain(0, dry);  // dry signal
+    mixers[it->second]->gain(1, wet);  // wet (reverb) signal
   }
 
   ~SamplePlayer() {
@@ -156,14 +161,16 @@ connections[i * 1 + 0] = new AudioConnection(*players[i], 0, *mixers[i], 0);
       delete filters[i];
       delete reverbs[i];
       delete mixers[i];
+      delete bitcrusher_mixers[i];
     }
-    for (int i = 0; i < num_sources * 6; i++) delete connections[i];
+    for (int i = 0; i < num_sources * 8; i++) delete connections[i];
     delete[] players;
     delete[] amps;
     delete[] bitcrushers;
     delete[] filters;
     delete[] reverbs;
     delete[] mixers;
+    delete[] bitcrusher_mixers;
     delete[] connections;
   }
 };

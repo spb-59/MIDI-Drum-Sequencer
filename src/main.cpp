@@ -31,13 +31,18 @@ void setup() {
   player.add_sample("BOP", AudioSampleBop);
   player.add_sample("CHORD1", AudioSampleChord1);
   player.add_sample("CHORD2", AudioSampleChord2);
+  player.add_sample("KICK",AudioSampleKick);
 
-  // usbMIDI.setHandleClock([]() { global.handleMidiClock(); });
-  // usbMIDI.setHandleStart([]() { global.handleMidiStart(); });
-  // usbMIDI.setHandleStop([]() { global.handleMidiStop(); });
-  // usbMIDI.setHandleContinue([]() { global.handleMidiContinue(); });
+  usbMIDI.setHandleClock([]() { global.handleMidiClock(); });
+  usbMIDI.setHandleStart([]() { global.handleMidiStart(); });
+  usbMIDI.setHandleStop([]() { global.handleMidiStop(); });
+  usbMIDI.setHandleContinue([]() { global.handleMidiContinue(); });
 }
 
 void loop() {
+  // Make sure to process MIDI messages first
+  usbMIDI.read();
+  
+  // Then run the main loop
   global.loop();
 }
