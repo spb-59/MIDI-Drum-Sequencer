@@ -55,6 +55,9 @@ class SamplePlayer : public Instrument {
       connections[i * 6 + 4] = new AudioConnection(*filters[i], 0, *mixers[i], 0);
       connections[i * 6 + 5] = new AudioConnection(*reverbs[i], 0, *mixers[i], 1);
 
+
+connections[i * 1 + 0] = new AudioConnection(*players[i], 0, *mixers[i], 0);
+
       mixers[i]->gain(0, 1.0f);
       mixers[i]->gain(1, 0.0f);
 
@@ -127,7 +130,7 @@ class SamplePlayer : public Instrument {
     auto it = sample_index.find(name);
     if (it == sample_index.end()) return;
     
-    float reverbTime = (value / 127.0f) * 5.0f;
+    float reverbTime = 1;
     reverbs[it->second]->reverbTime(reverbTime);
   }
   

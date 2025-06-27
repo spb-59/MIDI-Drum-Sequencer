@@ -53,6 +53,7 @@ void loop() {
     unsigned long now = micros();
     if (lastTimestamp == 0) lastTimestamp = now;
 
+<<<<<<< HEAD
     long time_off = 0;
     if (RAND_TIMING > 0) {
       if (random(100) < RAND_TIMING) {
@@ -60,6 +61,16 @@ void loop() {
         time_off = map(random(10), 0, 9, 0, max_offset);
         time_off *= random(2) > 0 ? -1 : 1;
       }
+=======
+  long time_off = 0;
+  if (RAND_TIMING > 0) {
+
+    if (random(100) < RAND_TIMING) {
+
+      int max_offset = map(RAND_TIMING, 1, 100, 200, 800);
+      time_off = map(random(10), 0, 9, 0, max_offset);
+      time_off *= random(2) > 0 ? -1 : 1;
+>>>>>>> 0bf015d (refactor: update timing and gain settings, improve layer handling, and adjust MIDI handling)
     }
 
     if ((long)(now - (lastTimestamp+time_off)) >= clock_us) {
@@ -82,6 +93,17 @@ void loop() {
       
       lastTimestamp += clock_us;
     }
+<<<<<<< HEAD
+=======
+    if (clock_count==0){
+      do_next=true;// to improve visual feedback
+    }
+
+    div_count = (div_count + 1) % 24;
+    for (int i = 0; i < 8; i++) layers[i]->playDiv(div_count);
+
+    lastTimestamp += clock_us;
+>>>>>>> 0bf015d (refactor: update timing and gain settings, improve layer handling, and adjust MIDI handling)
   }
 
   // unsigned long t2 = micros();

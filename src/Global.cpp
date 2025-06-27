@@ -48,6 +48,7 @@ void Global::update_states(){
             reset=true;
             break;
         }
+<<<<<<< HEAD
                 if(i<4 && states.layerButtons[i].status==ButtonStatus::Hold){
             if (i==3) {
             toggleClockSource();
@@ -56,6 +57,12 @@ void Global::update_states(){
             current_layer=0;
 
 
+=======
+        if(i==0 && states.layerButtons[i].status==ButtonStatus::Hold){
+            states.layerButtons[i].status=ButtonStatus::None;
+            mode=Mode::OUT;
+            reset=true;
+>>>>>>> 0bf015d (refactor: update timing and gain settings, improve layer handling, and adjust MIDI handling)
             break;
         }
         if(states.layerButtons[i].status!=ButtonStatus::None && states.layerButtons[i].status!=ButtonStatus::Hold ){
@@ -64,8 +71,13 @@ void Global::update_states(){
             layers[i]->switchLayer();
         }
     }
+<<<<<<< HEAD
     
     print_states();
+=======
+
+    // print_states();
+>>>>>>> 0bf015d (refactor: update timing and gain settings, improve layer handling, and adjust MIDI handling)
 
     int newBPM = map(states.pots[0],0,1023,50,350);
     if (newBPM != BPM) {

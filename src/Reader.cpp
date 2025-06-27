@@ -9,7 +9,7 @@ Encoder encoderObjs[4] = {
 };
 long lastRawValues[4] = {0, 0, 0, 0};
 
-int DEBOUNCE = 100;
+int DEBOUNCE = 25;
 
 const char* statusToString(ButtonStatus status) {
   switch (status) {

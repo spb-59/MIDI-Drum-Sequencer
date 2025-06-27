@@ -38,12 +38,12 @@ class Instrument {
       int mixerNum = i / 4;
       int mixerInput = i % 4;
       connections[i] = new AudioConnection(*sources[i], 0, mixers[mixerNum], mixerInput);
-      mixers[mixerNum].gain(mixerInput, 0.25f);
+      mixers[mixerNum].gain(mixerInput, 0.5f);
     }
 
     for (int i = 0; i < num_mixers; i++) {
       connections[num_sources + i] = new AudioConnection(mixers[i], 0, *final_mixer, i);
-      final_mixer->gain(i, 0.25f);
+      final_mixer->gain(i, 1.0f);
     }
     setup_output();
   }
@@ -57,7 +57,7 @@ class Instrument {
   }
 
   void set_amp_gain( float _gain) {
-    _gain =map(_gain,0,127,10,30);
+    _gain =map(_gain,0,127,10,20);
       this->gain=_gain;
   }
 

@@ -7,7 +7,7 @@ std::string sampleMap[] = {"KICK", "SNARE", "HAT", "HAT2", "BOP", "CHORD1", "CHO
 Layer::Layer(Global* g,int i)
 {
     global=g;
-    LAYER_NUMBER=i+36;
+    LAYER_NUMBER=i; //36
     for (int i = 0; i < 16; i++) {
         beats[i] = ButtonStatus::None;
     }
@@ -115,6 +115,7 @@ void Layer::playDiv(int numDiv){
         usbMIDI.sendNoteOff(LAYER_NUMBER,velo,1); 
         usbMIDI.sendNoteOn(LAYER_NUMBER,velo,1); }
       else{
+        Serial.print('Note trigger');
         global->player->set_gain(sampleMap[LAYER_NUMBER],constrain(velo,0,127));
         global->player->trigger(sampleMap[LAYER_NUMBER]);
       }
